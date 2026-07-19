@@ -57,7 +57,7 @@ export const INITIAL_WINDOWS_DATA: SimulatorWindow[] = [
           { key: "NOFAS", label: "NOFAS", type: "string" },
           { key: "CABANG", label: "CABANG", type: "string" },
           { key: "Nama", label: "Nama Debitur", type: "string" },
-          { key: "Usia", label: "Usia", type: "number" },
+          { key: "Usia", label: "Usia", type: "formula", formula: '=DATEDIF(DATA_NOMINATIF!D2,TODAY(),"Y")' },
           { key: "Jenis", label: "Jenis Kredit", type: "string" },
           { key: "Plafond", label: "Plafond", type: "number" },
           { key: "Baki Debet", label: "Baki Debet", type: "number" },
@@ -72,16 +72,16 @@ export const INITIAL_WINDOWS_DATA: SimulatorWindow[] = [
           { key: "AO", label: "AO", type: "string" }
         ],
         initialData: [
-          { NOFAS: "0013B48556", CABANG: "CABANG AMBON", Nama: "HERMI SALAWANE", Usia: 50, Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 256000000, "Baki Debet": 227061019, Angsuran: 4226300, Pendapatan: 4732000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 88, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456781", AO: "AO AMBON" },
-          { NOFAS: "1113A41009", CABANG: "CABANG AMBON", Nama: "AISA TUASALAMONY", Usia: 53, Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 184000000, "Baki Debet": 132475463, Angsuran: 2791900, Pendapatan: 3503000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 76, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456782", AO: "AO AMBON" },
-          { NOFAS: "0513L50121", CABANG: "CABANG AMBON", Nama: "JACOMINA SALOMI ANTHOMINA AYAL", Usia: 57, Jenis: "3L - KREDIT PEGAWAI PLUS 3a - THT", Plafond: 43040000, "Baki Debet": 43040000, Angsuran: 573867, Pendapatan: 3000000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 39, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456783", AO: "AO AMBON" },
-          { NOFAS: "0013F48521", CABANG: "CABANG AMBON", Nama: "JACOMINA SALOMI ANTHOMINA AYAL", Usia: 57, Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 209251000, "Baki Debet": 183077110, Angsuran: 3557546, Pendapatan: 3000000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 156, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456784", AO: "AO AMBON" },
-          { NOFAS: "0013G48706", CABANG: "CABANG AMBON", Nama: "JULIANA BARBALINA SIAHAIJA", Usia: 57, Jenis: "3G - KREDIT PEGAWAI PLUS METODE-2", Plafond: 203328000, "Baki Debet": 194587514, Angsuran: 2639815, Pendapatan: 3300000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 158, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456785", AO: "AO AMBON" },
-          { NOFAS: "0513F49264", CABANG: "CABANG AMBON", Nama: "WELSA LOPULALAN", Usia: 58, Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 138004000, "Baki Debet": 115813727, Angsuran: 3185283, Pendapatan: 3747400, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 82, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456786", AO: "AO AMBON" },
-          { NOFAS: "1117A45931", CABANG: "CABANG AMBON", Nama: "SAMSIAH RUMEON BAHY", Usia: 46, Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 247000000, "Baki Debet": 230123759, Angsuran: 3040000, Pendapatan: 3502000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 165, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456787", AO: "AO AMBON" },
-          { NOFAS: "0513F49918", CABANG: "CABANG AMBON", Nama: "LA OKE", Usia: 54, Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 276701000, "Baki Debet": 270099016, Angsuran: 4632340, Pendapatan: 5264200, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 115, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456788", AO: "AO AMBON" },
-          { NOFAS: "0013B49159", CABANG: "CABANG AMBON", Nama: "MASITA NAHUMARURY", Usia: 48, Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 278000000, "Baki Debet": 266077685, Angsuran: 3867100, Pendapatan: 4595300, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 139, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456789", AO: "AO AMBON" },
-          { NOFAS: "1117A46214", CABANG: "CABANG AMBON", Nama: "LENNY DJOKJA", Usia: 46, Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 266000000, "Baki Debet": 244839982, Angsuran: 3380500, Pendapatan: 4187800, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 150, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456790", AO: "AO AMBON" }
+          { NOFAS: "0013B48556", CABANG: "CABANG AMBON", Nama: "HERMI SALAWANE", Usia: "", Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 256000000, "Baki Debet": 227061019, Angsuran: 4226300, Pendapatan: 4732000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 88, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456781", AO: "AO AMBON" },
+          { NOFAS: "1113A41009", CABANG: "CABANG AMBON", Nama: "AISA TUASALAMONY", Usia: "", Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 184000000, "Baki Debet": 132475463, Angsuran: 2791900, Pendapatan: 3503000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 76, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456782", AO: "AO AMBON" },
+          { NOFAS: "0513L50121", CABANG: "CABANG AMBON", Nama: "JACOMINA SALOMI ANTHOMINA AYAL", Usia: "", Jenis: "3L - KREDIT PEGAWAI PLUS 3a - THT", Plafond: 43040000, "Baki Debet": 43040000, Angsuran: 573867, Pendapatan: 3000000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 39, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456783", AO: "AO AMBON" },
+          { NOFAS: "0013F48521", CABANG: "CABANG AMBON", Nama: "JACOMINA SALOMI ANTHOMINA AYAL", Usia: "", Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 209251000, "Baki Debet": 183077110, Angsuran: 3557546, Pendapatan: 3000000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 156, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456784", AO: "AO AMBON" },
+          { NOFAS: "0013G48706", CABANG: "CABANG AMBON", Nama: "JULIANA BARBALINA SIAHAIJA", Usia: "", Jenis: "3G - KREDIT PEGAWAI PLUS METODE-2", Plafond: 203328000, "Baki Debet": 194587514, Angsuran: 2639815, Pendapatan: 3300000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 158, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456785", AO: "AO AMBON" },
+          { NOFAS: "0513F49264", CABANG: "CABANG AMBON", Nama: "WELSA LOPULALAN", Usia: "", Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 138004000, "Baki Debet": 115813727, Angsuran: 3185283, Pendapatan: 3747400, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 82, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456786", AO: "AO AMBON" },
+          { NOFAS: "1117A45931", CABANG: "CABANG AMBON", Nama: "SAMSIAH RUMEON BAHY", Usia: "", Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 247000000, "Baki Debet": 230123759, Angsuran: 3040000, Pendapatan: 3502000, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 165, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456787", AO: "AO AMBON" },
+          { NOFAS: "0513F49918", CABANG: "CABANG AMBON", Nama: "LA OKE", Usia: "", Jenis: "3F - KREDIT PEGAWAI PLUS METODE-1", Plafond: 276701000, "Baki Debet": 270099016, Angsuran: 4632340, Pendapatan: 5264200, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 115, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456788", AO: "AO AMBON" },
+          { NOFAS: "0013B49159", CABANG: "CABANG AMBON", Nama: "MASITA NAHUMARURY", Usia: "", Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 278000000, "Baki Debet": 266077685, Angsuran: 3867100, Pendapatan: 4595300, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 139, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456789", AO: "AO AMBON" },
+          { NOFAS: "1117A46214", CABANG: "CABANG AMBON", Nama: "LENNY DJOKJA", Usia: "", Jenis: "3B - KREDIT PEGAWAI ASN", Plafond: 266000000, "Baki Debet": 244839982, Angsuran: 3380500, Pendapatan: 4187800, "% Potongan": "", "Status Potongan": "", "Sisa Tenor": 150, Kol: 1, "SKALA PRIORITAS": "", "No HP": "08123456790", AO: "AO AMBON" }
         ]
       }
     ]
@@ -135,6 +135,21 @@ export const LESSON_MODULES: LessonModule[] = [
     title: "1. Analisis Prospek Plafond Di Bawah 100 Juta",
     subtitle: "Mempelajari pengolahan potongan angsuran & kriteria skala prioritas",
     chapters: [
+      {
+        id: "ch1_0",
+        title: "Perhitungan Usia Lintas Sheet (DATEDIF)",
+        contentHtml: `
+          <p class="mb-2"><strong>Perhitungan Usia Lintas Lembar Kerja (Cross-Sheet):</strong></p>
+          <p class="mb-3 text-slate-600">
+            Sebelum menganalisa kelayakan, kita perlu mengisi kolom <strong>Usia (Kolom D)</strong> pada sheet <strong>Prospek</strong>. Data tanggal lahir nasabah berada di sheet referensi sebelah, yaitu <strong>Data nominatif</strong> pada <strong>Kolom D</strong>.
+          </p>
+          <div class="bg-emerald-50 border-l-4 border-emerald-600 p-3 rounded-r-md mb-4 text-xs">
+            <p class="font-semibold text-emerald-950 mb-1">Rumus Perhitungan Usia Lintas Sheet:</p>
+            <code class="block bg-white p-1.5 rounded border border-emerald-100 font-mono text-[10px]">=DATEDIF(DATA_NOMINATIF!D2, TODAY(), "Y")</code>
+            <p class="text-slate-600 mt-1 leading-relaxed">Ini mengambil sel tanggal lahir <strong>D2</strong> dari sheet referensi <code>DATA_NOMINATIF</code>, lalu menghitung selisih tahun penuh (<code>"Y"</code>) hingga hari ini secara dinamis.</p>
+          </div>
+        `
+      },
       {
         id: "ch1_1",
         title: "Pemetaan Potongan Angsuran",
@@ -236,10 +251,31 @@ export const LESSON_MODULES: LessonModule[] = [
 // Practice challenges to guide user step-by-step
 export const TUTORIAL_CHALLENGES: Challenge[] = [
   {
+    id: "challenge_usia",
+    windowId: "prospek_under_100jt",
+    sheetId: "prospek",
+    title: "1. Hitung Usia (DATEDIF Lintas Sheet)",
+    description: "Ambil tanggal lahir dari sheet Data Nominatif untuk menghitung usia debitur di kolom Usia.",
+    instructions: "Pilih sel di kolom 'Usia' (Kolom D, mulai baris 2), lalu ketik rumus: =DATEDIF(DATA_NOMINATIF!D2,TODAY(),\"Y\") di bilah rumus atas dan tekan Enter/Apply.",
+    targetColumn: "Usia",
+    expectedFormula: [
+      '=DATEDIF(DATA_NOMINATIF!D2,TODAY(),"Y")',
+      '=DATEDIF(DATA_NOMINATIF!D2, TODAY(), "Y")',
+      '=DATEDIF(\'Data nominatif\'!D2,TODAY(),"Y")',
+      '=DATEDIF(\'Data nominatif\'!D2, TODAY(), "Y")',
+      '=DATEDIF(DATA_NOMINATIF!D2,TODAY(), "Y")',
+      '=DATEDIF(\'Data nominatif\'!D2,TODAY(), "Y")',
+      'DATEDIF(DATA_NOMINATIF!D2,TODAY(),"Y")'
+    ],
+    hint: "Ketik `=DATEDIF(DATA_NOMINATIF!D2,TODAY(),\"Y\")` pada bilah rumus.",
+    successMessage: "Sempurna! Usia debitur berhasil dikalkulasi dari data referensi eksternal sheet Data Nominatif.",
+    completed: false
+  },
+  {
     id: "challenge_potongan",
     windowId: "prospek_under_100jt",
     sheetId: "prospek",
-    title: "1. Hitung Rasio % Potongan",
+    title: "2. Hitung Rasio % Potongan",
     description: "Masukkan rumus pembagian angsuran terhadap pendapatan di kolom % Potongan.",
     instructions: "Pilih sel di kolom '% Potongan' (Kolom J, mulai baris 2), lalu ketik rumus: =H2/I2 di bilah rumus atas dan tekan Enter/Apply. (H adalah Angsuran, I adalah Pendapatan).",
     targetColumn: "% Potongan",
@@ -252,7 +288,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_status_potongan",
     windowId: "prospek_under_100jt",
     sheetId: "prospek",
-    title: "2. Tentukan Status Potongan (IF)",
+    title: "3. Tentukan Status Potongan (IF)",
     description: "Evaluasi apakah rasio potongan > 90% (DSR limit).",
     instructions: "Pilih sel di kolom 'Status Potongan' (Kolom K, baris 2), lalu ketik rumus: =IF(J2>0.9,\"TIDAK LAYAK\",\"NORMAL\") dan tekan Enter/Apply.",
     targetColumn: "Status Potongan",
@@ -265,7 +301,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_skala_prioritas",
     windowId: "prospek_under_100jt",
     sheetId: "prospek",
-    title: "3. Evaluasi Skala Prioritas (AND & IF)",
+    title: "4. Evaluasi Skala Prioritas (AND & IF)",
     description: "Saring prioritas pemasaran kredit mikro di bawah 100 juta yang berkolektibilitas lancar.",
     instructions: "Pilih sel di kolom 'SKALA PRIORITAS' (Kolom N, baris 2), lalu ketik rumus: =IF(AND(F2<=100000000,M2=1),IF(L2<=24,\"PRIORITAS 1\",\"PRIORITAS 2\"),\"CEK MANUAL\") dan tekan Enter/Apply.",
     targetColumn: "SKALA PRIORITAS",
@@ -281,7 +317,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_umur_bup",
     windowId: "pegawai_plus_bup",
     sheetId: "pegawai_bup",
-    title: "4. Hitung Umur Debitur (DATEDIF)",
+    title: "5. Hitung Umur Debitur (DATEDIF)",
     description: "Hitung umur debitur saat ini berdasarkan tanggal lahir.",
     instructions: "Pilih sel di kolom 'Umur' (Kolom G, baris 2), lalu ketik rumus: =DATEDIF(F2,TODAY(),\"Y\") dan tekan Enter/Apply.",
     targetColumn: "Umur",
@@ -294,7 +330,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_tgl_bup",
     windowId: "pegawai_plus_bup",
     sheetId: "pegawai_bup",
-    title: "5. Hitung Tanggal BUP (DATE & YEAR)",
+    title: "6. Hitung Tanggal BUP (DATE & YEAR)",
     description: "Hitung tepat tanggal lahir + 58 tahun pensiun.",
     instructions: "Pilih sel di kolom 'Tgl BUP' (Kolom I, baris 2), lalu ketik rumus: =DATE(YEAR(F2)+H2,MONTH(F2),DAY(F2)) dan tekan Enter/Apply.",
     targetColumn: "Tgl BUP",
@@ -310,7 +346,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_sisa_dinas",
     windowId: "pegawai_plus_bup",
     sheetId: "pegawai_bup",
-    title: "6. Hitung Sisa Masa Dinas",
+    title: "7. Hitung Sisa Masa Dinas",
     description: "Hitung berapa tahun sisa dinas pegawai sebelum masuk masa pensiun.",
     instructions: "Pilih sel di kolom 'Sisa Masa Dinas (Th)' (Kolom J, baris 2), lalu masukkan rumus: =DATEDIF(TODAY(),I2,\"Y\") dan tekan Enter/Apply.",
     targetColumn: "Sisa Masa Dinas (Th)",
@@ -323,12 +359,12 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_prospek_kredit",
     windowId: "pegawai_plus_bup",
     sheetId: "pegawai_bup",
-    title: "7. Tentukan Skema Pegawai Plus",
+    title: "8. Tentukan Skema Pegawai Plus",
     description: "Klasifikasikan skema Pegawai Plus berdasarkan sisa masa dinas.",
     instructions: "Pilih sel di kolom 'Propek Untuk Kredit' (Kolom K, baris 2), lalu masukkan rumus: =IF(J2<=5,\"Pegawai Plus Skema 2\",IF(J2<=8,\"Pegawai Plus Skema 1\",\"Belum Pegawai Plus\")) dan tekan Enter/Apply.",
     targetColumn: "Propek Untuk Kredit",
     expectedFormula: [
-      '=IF(J2<=5,"Pegawai Plus Skema 2",IF(J2<=8,"Pegawai Plus Skema 1","Belum Pegawai Plus"))',
+      '=IF(J2<=5,"Pegawai Plus Skema 2",IF(J2<=8,"Pegawai Plus Skema 1\",\"Belum Pegawai Plus"))',
       '=IF(J2<=5, "Pegawai Plus Skema 2", IF(J2<=8, "Pegawai Plus Skema 1", "Belum Pegawai Plus"))'
     ],
     hint: "Ketik `=IF(J2<=5,\"Pegawai Plus Skema 2\",IF(J2<=8,\"Pegawai Plus Skema 1\",\"Belum Pegawai Plus\"))`.",
@@ -339,7 +375,7 @@ export const TUTORIAL_CHALLENGES: Challenge[] = [
     id: "challenge_bisa_kredit",
     windowId: "pegawai_plus_bup",
     sheetId: "pegawai_bup",
-    title: "8. Tentukan Kelayakan Prospek (IF)",
+    title: "9. Tentukan Kelayakan Prospek (IF)",
     description: "Cek apakah debitur BISA melakukan jaminan Pegawai Plus (Bakidebet Juni <= 100 Juta).",
     instructions: "Pilih sel di kolom 'Prospek' (Kolom N, baris 2), lalu ketik rumus: =IF(M2<=100000000,\"BISA\",\"TIDAK BISA\") dan tekan Enter/Apply.",
     targetColumn: "Prospek",

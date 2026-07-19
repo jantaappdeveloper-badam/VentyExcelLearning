@@ -110,6 +110,38 @@ export function SpreadsheetSimulator({
       return "CEK MANUAL";
     }
 
+    // 3.5) Usia (Cross-sheet from Data Nominatif!D): DATEDIF(DATA_NOMINATIF!D2, TODAY(), "Y")
+    const isUsiaFormula = val.includes("DATEDIF") &&
+                          (val.includes("DATA_NOMINATIF") || val.includes("DATANOMINATIF")) &&
+                          (val.includes("D" + r) || val.includes("D2") || val.includes("D") || val.includes("LAHIR")) &&
+                          val.includes("TODAY") &&
+                          (val.includes('"Y"') || val.includes("'Y'") || val.includes(",Y,") || val.includes("Y"));
+    if (isUsiaFormula) {
+      const nominatifSheet = windowConfig.sheets.find(s => s.id === "data_nominatif");
+      if (nominatifSheet) {
+        const nofas = row["NOFAS"] || row["Nofas"];
+        const name = row["Nama"] || row["Nama Debitur"] || row["NAMA DEBITUR"];
+        
+        let nominatifRow = nominatifSheet.initialData.find(item => 
+          (nofas && item["NOFAS"] === nofas) || 
+          (name && (item["NAMA DEBITUR"] === name || item["Nama Debitur"] === name))
+        );
+        if (!nominatifRow) {
+          nominatifRow = nominatifSheet.initialData[rowIndex];
+        }
+        
+        if (nominatifRow) {
+          const tglLahir = String(nominatifRow["Tanggal Lahir"] || nominatifRow["Tgl Lahir"]);
+          const parts = tglLahir.split("/");
+          if (parts.length === 3) {
+            const birthYear = Number(parts[2]);
+            return 2026 - birthYear; // Reference context year is 2026
+          }
+        }
+      }
+      return 50; // default fallback
+    }
+
     // 4) Umur: DATEDIF(Tgl Lahir, TODAY(), "Y") -> Tgl Lahir is column F (6th column)
     const isUmur = val.includes("DATEDIF") && 
                    (val.includes("F" + r) || val.includes("F2") || val.includes("LAHIR") || val.includes("F")) &&
