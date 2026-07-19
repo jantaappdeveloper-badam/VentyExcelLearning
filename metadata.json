@@ -1,0 +1,8 @@
+{
+  "name": "Excel Academy Pemasaran Kredit",
+  "description": "Aplikasi pembelajaran interaktif Microsoft Excel untuk pengolahan data dasar nominatif kredit dan pemasaran kredit perbankan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
