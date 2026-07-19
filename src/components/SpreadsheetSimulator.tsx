@@ -49,6 +49,8 @@ export function SpreadsheetSimulator({
     setFilterBranch("ALL");
   }, [activeWindowId, activeSheetId]);
 
+
+
   // Formula Evaluator Helper (High-fidelity simulator logic)
   const evaluateCellFormula = (formula: string, row: SpreadsheetRow, rowIndex: number): string | number => {
     // Normalize formula
@@ -361,6 +363,24 @@ export function SpreadsheetSimulator({
     });
   };
 
+  // Switch back to Practice Mode and clear solutions/user formulas
+  const handleSwitchToPractice = () => {
+    const cleanedData = data.map((row) => {
+      const cleanedRow = { ...row };
+      activeSheet.columns.forEach(col => {
+        if (col.type === "formula") {
+          delete cleanedRow[`_user_formula_${col.key}`];
+        }
+      });
+      return cleanedRow;
+    });
+    setData(cleanedData);
+    setPracticeMode(true);
+    setSelectedCell(null);
+    setFormulaBarInput("");
+    setStatusMessage({ text: "Masuk ke Mode Latihan. Kolom rumus telah dikosongkan agar Anda dapat berlatih menulis rumus sendiri!", type: "info" });
+  };
+
   // Reset current sheet
   const handleResetSheet = () => {
     setData(JSON.parse(JSON.stringify(activeSheet.initialData)));
@@ -407,6 +427,58 @@ export function SpreadsheetSimulator({
     return matchesSearch && matchesBranch;
   });
 
+  // Listen for arrow keys to navigate the grid ("krusor ke kiri dan ke kanan")
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedCell) return;
+      
+      // If user is focused on the formula bar input, don't hijack arrow keys!
+      if (document.activeElement?.tagName === "INPUT") {
+        return;
+      }
+
+      const { rIdx, cIdx } = selectedCell;
+      let nextRIdx = rIdx;
+      let nextCIdx = cIdx;
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nextCIdx = Math.min(activeSheet.columns.length - 1, cIdx + 1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        nextCIdx = Math.max(0, cIdx - 1);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        nextRIdx = Math.min(filteredRows.length - 1, rIdx + 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        nextRIdx = Math.max(0, rIdx - 1);
+      } else {
+        return;
+      }
+
+      const nextCol = activeSheet.columns[nextCIdx];
+      const excelCol = getExcelColumnLetter(nextCIdx);
+      const excelRow = nextRIdx + 2;
+
+      setSelectedCell({ rIdx: nextRIdx, cIdx: nextCIdx, key: `${excelCol}${excelRow}` });
+      
+      // Update formula bar input
+      const nextRow = filteredRows[nextRIdx];
+      if (nextCol.type === "formula") {
+        const writtenFormula = nextRow[`_user_formula_${nextCol.key}`] as string;
+        setFormulaBarInput(writtenFormula || "=");
+      } else {
+        setFormulaBarInput(String(nextRow[nextCol.key] ?? ""));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedCell, filteredRows, activeSheet]);
+
   return (
     <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm" id="spreadsheet-simulator">
       {/* Tab Selector / Spreadsheet Window Header */}
@@ -424,27 +496,27 @@ export function SpreadsheetSimulator({
           {/* Practice/Solution Mode Switcher */}
           <div className="bg-[#0b5930] p-0.5 rounded-lg flex border border-emerald-700">
             <button
-              onClick={() => setPracticeMode(true)}
-              className={`px-3 py-1 text-[10px] font-bold rounded-md flex items-center gap-1 cursor-pointer transition-all ${
+              onClick={handleSwitchToPractice}
+              className={`px-3 py-1 text-[10px] font-extrabold rounded-md flex items-center gap-1.5 cursor-pointer transition-all ${
                 practiceMode 
-                  ? "bg-emerald-600 text-white shadow-xs" 
+                  ? "bg-amber-500 text-slate-950 shadow-sm" 
                   : "text-emerald-200 hover:text-white"
               }`}
             >
-              <Lock className="w-3 h-3" /> Mode Latihan
+              <Lock className="w-3 h-3" /> Mode Latihan (Kosongkan Jawaban)
             </button>
             <button
               onClick={() => {
                 setPracticeMode(false);
                 handleShowAllSolutions();
               }}
-              className={`px-3 py-1 text-[10px] font-bold rounded-md flex items-center gap-1 cursor-pointer transition-all ${
+              className={`px-3 py-1 text-[10px] font-extrabold rounded-md flex items-center gap-1.5 cursor-pointer transition-all ${
                 !practiceMode 
-                  ? "bg-emerald-600 text-white shadow-xs" 
+                  ? "bg-emerald-600 text-white shadow-sm" 
                   : "text-emerald-200 hover:text-white"
               }`}
             >
-              <Eye className="w-3 h-3" /> Lihat Solusi
+              <Eye className="w-3 h-3" /> Mode Solusi (Tampilkan Jawaban)
             </button>
           </div>
 
@@ -476,6 +548,23 @@ export function SpreadsheetSimulator({
           ))}
         </div>
       )}
+
+      {/* Current Mode Badge Indicator */}
+      <div className={`p-2.5 px-4 select-none font-sans text-xs flex items-center justify-between border-b shrink-0 ${
+        practiceMode 
+          ? "bg-amber-50/90 border-amber-200 text-amber-900" 
+          : "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+      }`}>
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${practiceMode ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+          <span className="font-extrabold tracking-wide uppercase text-[10px]">
+            {practiceMode ? "⚠️ STATUS: MODE LATIHAN (JAWABAN KOSONG)" : "✅ STATUS: MODE SOLUSI (ADA JAWABAN)"}
+          </span>
+        </div>
+        <p className="text-[10px] text-slate-500 font-bold hidden sm:block">
+          {practiceMode ? "Silakan ketik rumus Excel yang benar untuk memecahkan tantangan." : "Jawaban rumus diisi otomatis untuk keperluan presentasi & pengauditan."}
+        </p>
+      </div>
 
       {/* Interactive Ribbon Controls */}
       <div className="bg-slate-50 border-b border-slate-200 p-2.5 flex flex-wrap items-center justify-between gap-3 select-none text-xs shrink-0">
@@ -579,8 +668,8 @@ export function SpreadsheetSimulator({
       )}
 
       {/* Spreadsheet Main Grid Canvas */}
-      <div className="flex-1 overflow-auto custom-scrollbar select-none bg-slate-100">
-        <table className="border-collapse table-fixed w-full bg-white text-[11px] font-semibold text-slate-800">
+      <div className="flex-1 overflow-auto custom-scrollbar select-none bg-slate-100 max-w-full">
+        <table className="border-collapse table-auto min-w-max bg-white text-[11px] font-semibold text-slate-800">
           {/* Header Row */}
           <thead className={isHeaderFrozen ? "sticky top-0 z-10 shadow-xs" : ""}>
             <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold text-[10.5px]">
@@ -588,10 +677,11 @@ export function SpreadsheetSimulator({
               <th className="w-10 border-r border-b border-slate-200 text-center p-2 bg-slate-100 select-none font-semibold"></th>
               {activeSheet.columns.map((col, idx) => {
                 const excelLetter = getExcelColumnLetter(idx);
+                const colWidth = col.key === "NAMA DEBITUR" || col.key === "Nama" || col.key === "Nama Debitur" || col.key === "Jenis" || col.key.toLowerCase().includes("kredit") ? "min-w-[240px]" : "min-w-[160px]";
                 return (
                   <th 
                     key={col.key} 
-                    className="border-r border-b border-slate-200 p-2 text-center bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors relative min-w-32 group select-none font-bold text-slate-700"
+                    className={`border-r border-b border-slate-200 px-3.5 py-2.5 text-center bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors relative ${colWidth} group select-none font-bold text-slate-700`}
                     onClick={() => handleSort(col.key)}
                   >
                     <div className="text-[9.5px] text-slate-400 font-mono font-medium block">
@@ -662,14 +752,16 @@ export function SpreadsheetSimulator({
                       cellText = "text-slate-600";
                     }
 
+                    const isLongCol = col.key === "NAMA DEBITUR" || col.key === "Nama" || col.key === "Nama Debitur" || col.key === "Jenis" || col.key.toLowerCase().includes("kredit");
+
                     return (
                       <td 
                         key={col.key}
                         onClick={() => handleCellClick(rIdx, cIdx, col.key)}
-                        className={`border-r border-slate-200 p-2 truncate relative cursor-pointer select-none ${cellBg} ${cellText} ${
-                          isSelected ? "ring-2 ring-emerald-600 bg-white z-10 shadow-xs" : ""
+                        className={`border-r border-slate-200 px-3.5 py-2.5 whitespace-nowrap overflow-hidden relative cursor-pointer select-none ${cellBg} ${cellText} ${
+                          isSelected ? "ring-2 ring-emerald-600 bg-white z-10 shadow-sm" : ""
                         }`}
-                        style={{ minWidth: "128px" }}
+                        style={{ minWidth: isLongCol ? "240px" : "160px" }}
                         title={`${col.label} (Baris ${excelRowIdx}): ${displayVal}`}
                       >
                         {isFormulaCol && practiceMode && !row[`_user_formula_${col.key}`] ? (
@@ -682,7 +774,7 @@ export function SpreadsheetSimulator({
                         
                         {/* Selected cell marker dot */}
                         {isSelected && (
-                          <div className="absolute right-0 bottom-0 w-1.5 h-1.5 bg-emerald-700 border border-white" />
+                           <div className="absolute right-0 bottom-0 w-1.5 h-1.5 bg-emerald-700 border border-white" />
                         )}
                       </td>
                     );
