@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bot, Send, User, RefreshCw, MessageSquare, AlertCircle } from "lucide-react";
+import { Bot, Send, User, RefreshCw, MessageSquare, AlertCircle, X } from "lucide-react";
 import { ChatMessage } from "../types";
 
-export function AIAssistant() {
+interface AIAssistantProps {
+  onClose?: () => void;
+}
+
+export function AIAssistant({ onClose }: AIAssistantProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "init",
@@ -107,6 +111,17 @@ export function AIAssistant() {
             <span className="text-[9px] text-slate-400">Gemini 3.5 Assistant</span>
           </div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            type="button"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Tutup Panel AI"
+            aria-label="Tutup Panel AI"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">

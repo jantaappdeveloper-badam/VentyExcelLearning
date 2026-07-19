@@ -207,7 +207,7 @@ export default function App() {
         {/* Right Hand Sidebar: AI Coach Assistant (Span 3, collapsible) */}
         {showAiAssistant && (
           <section className="col-span-1 lg:col-span-3 flex flex-col min-h-0 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <AIAssistant />
+            <AIAssistant onClose={() => setShowAiAssistant(false)} />
           </section>
         )}
 

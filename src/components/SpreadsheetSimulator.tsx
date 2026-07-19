@@ -51,23 +51,37 @@ export function SpreadsheetSimulator({
 
   // Formula Evaluator Helper (High-fidelity simulator logic)
   const evaluateCellFormula = (formula: string, row: SpreadsheetRow, rowIndex: number): string | number => {
-    const val = formula.trim().toUpperCase();
-    const r = rowIndex + 2; // Rows are 1-indexed, with Row 1 being the column headers.
+    // Normalize formula
+    let normalized = formula.trim().toUpperCase();
+    
+    // Convert curly/typographic quotes to plain ones
+    normalized = normalized.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    
+    // Convert semicolon to comma (the Indonesian local Excel convention separator!)
+    normalized = normalized.replace(/;/g, ",");
+    
+    // Remove all spaces for reliable keyword checking
+    const val = normalized.replace(/\s+/g, "");
+    
+    // Row indicator (1-based sheet row for formula reference, headers are Row 1, data starts at Row 2)
+    const r = rowIndex + 2;
 
     // 1) Ratio % Potongan: H/I (Angsuran / Pendapatan)
-    if (val.startsWith("=H" + r + "/I" + r) || val.startsWith("=H/I") || val === "=H2/I2" || val.startsWith("=H" + r + " / I" + r)) {
+    const isRatio = val === `=H${r}/I${r}` || val === `=H2/I2` || val === "=H/I" || 
+                    /^[=]?H\d*\/I\d*$/.test(val);
+    if (isRatio) {
       const angsuran = Number(row["Angsuran"]) || 0;
       const pendapatan = Number(row["Pendapatan"] || row["Total Pendapatan"]) || 1;
       return angsuran / pendapatan;
     }
 
     // 2) Status Potongan: IF(% Potongan > 90%, "TIDAK LAYAK", "NORMAL")
-    if (
-      val.includes("IF(J" + r + ">0.9") || 
-      val.includes("IF(J" + r + ">90%") || 
-      val === '=IF(J2>0.9,"TIDAK LAYAK","NORMAL")' ||
-      val === '=IF(J2>0.9, "TIDAK LAYAK", "NORMAL")'
-    ) {
+    const isStatusPotongan = val.includes("IF") && 
+                             (val.includes("J" + r) || val.includes("J2") || val.includes("%POTONGAN")) &&
+                             (val.includes("0.9") || val.includes("90%")) &&
+                             val.includes("TIDAKLAYAK") &&
+                             val.includes("NORMAL");
+    if (isStatusPotongan) {
       const angsuran = Number(row["Angsuran"]) || 0;
       const pendapatan = Number(row["Pendapatan"] || row["Total Pendapatan"]) || 1;
       const dsr = angsuran / pendapatan;
@@ -75,12 +89,15 @@ export function SpreadsheetSimulator({
     }
 
     // 3) SKALA PRIORITAS: IF(AND(Plafond <= 100M, Kol == 1), IF(Sisa Tenor <= 24, "PRIORITAS 1", "PRIORITAS 2"), "CEK MANUAL")
-    if (
-      val.includes("AND(F" + r + "<=100000000") || 
-      val.includes("AND(F2<=100000000") || 
-      val.includes("F2<=100000000") || 
-      val.includes("F" + r + "<=100000000")
-    ) {
+    const isSkalaPrioritas = val.includes("IF") && val.includes("AND") &&
+                             (val.includes("F" + r) || val.includes("F2") || val.includes("PLAFOND")) &&
+                             (val.includes("100000000") || val.includes("100M") || val.includes("100.000.000")) &&
+                             (val.includes("M" + r) || val.includes("M2") || val.includes("KOL")) &&
+                             (val.includes("L" + r) || val.includes("L2") || val.includes("TENOR") || val.includes("SISA")) &&
+                             val.includes("PRIORITAS1") &&
+                             val.includes("PRIORITAS2") &&
+                             val.includes("CEKMANUAL");
+    if (isSkalaPrioritas) {
       const plafond = Number(row["Plafond"]) || 0;
       const kol = Number(row["Kol"] || row["Kolektibilitas"]) || 1;
       const sisaTenor = Number(row["Sisa Tenor"] || row["Sisa Jangka Waktu"]) || 0;
@@ -92,58 +109,57 @@ export function SpreadsheetSimulator({
     }
 
     // 4) Umur: DATEDIF(Tgl Lahir, TODAY(), "Y") -> Tgl Lahir is column F (6th column)
-    if (
-      val.includes("DATEDIF(F" + r + ",TODAY(),\"Y\")") || 
-      val.includes("DATEDIF(F2,TODAY(),\"Y\")") || 
-      val.includes("TODAY(),\"Y\"")
-    ) {
+    const isUmur = val.includes("DATEDIF") && 
+                   (val.includes("F" + r) || val.includes("F2") || val.includes("LAHIR") || val.includes("F")) &&
+                   val.includes("TODAY") &&
+                   (val.includes('"Y"') || val.includes("'Y'") || val.includes(",Y,") || val.includes("Y"));
+    if (isUmur) {
       const tglLahir = String(row["Tgl Lahir"] || row["Tanggal Lahir"]);
       const parts = tglLahir.split("/");
       if (parts.length === 3) {
         const birthYear = Number(parts[2]);
-        return 2026 - birthYear; // Our current container/context year is 2026
+        return 2026 - birthYear; // Reference context year is 2026
       }
       return 50;
     }
 
     // 5) Tgl BUP: DATE(YEAR(Tgl Lahir) + BUP, MONTH, DAY)
-    if (
-      val.includes("DATE(YEAR(F" + r + ")+H" + r) || 
-      val.includes("DATE(YEAR(F2)+H2") || 
-      val.includes("YEAR(F" + r + ")+H" + r)
-    ) {
+    const isTglBup = val.includes("DATE") && val.includes("YEAR") && val.includes("MONTH") && val.includes("DAY") &&
+                     (val.includes("F" + r) || val.includes("F2") || val.includes("LAHIR")) &&
+                     (val.includes("H" + r) || val.includes("H2") || val.includes("BUP"));
+    if (isTglBup) {
       const tglLahir = String(row["Tgl Lahir"] || row["Tanggal Lahir"]);
       const bup = Number(row["BUP"]) || 58;
       const parts = tglLahir.split("/");
       if (parts.length === 3) {
+        const day = parts[0];
+        const month = parts[1];
         const year = Number(parts[2]) + bup;
-        return `${parts[0]}/${parts[1]}/${year}`;
+        return `${day}/${month}/${year}`;
       }
       return "07/12/2033";
     }
 
     // 6) Sisa Masa Dinas: DATEDIF(TODAY(), Tgl BUP, "Y") -> Tgl BUP is column I
-    if (
-      val.includes("DATEDIF(TODAY(),I" + r + ",\"Y\")") || 
-      val.includes("DATEDIF(TODAY(),I2") || 
-      val.includes("TODAY(),I" + r)
-    ) {
+    const isSisaMasaDinas = val.includes("DATEDIF") && val.includes("TODAY") &&
+                            (val.includes("I" + r) || val.includes("I2") || val.includes("BUP")) &&
+                            (val.includes('"Y"') || val.includes("'Y'") || val.includes("Y"));
+    if (isSisaMasaDinas) {
       const tglLahir = String(row["Tgl Lahir"] || row["Tanggal Lahir"]);
       const bup = Number(row["BUP"]) || 58;
       const parts = tglLahir.split("/");
       if (parts.length === 3) {
         const bupYear = Number(parts[2]) + bup;
-        return bupYear - 2026; // Today is 2026
+        return Math.max(0, bupYear - 2026); // Today is 2026
       }
       return 7;
     }
 
     // 7) Propek Untuk Kredit: IF(Sisa Masa Dinas <= 5, "Skema 2", IF(Sisa Masa Dinas <= 8, "Skema 1", "Belum"))
-    if (
-      val.includes("IF(J" + r + "<=5") || 
-      val.includes("IF(J2<=5") || 
-      val.includes("J" + r + "<=5")
-    ) {
+    const isProspekKreditType = val.includes("IF") &&
+                                (val.includes("J" + r) || val.includes("J2") || val.includes("DINAS") || val.includes("SISA")) &&
+                                val.includes("SKEMA2") && val.includes("SKEMA1");
+    if (isProspekKreditType) {
       const tglLahir = String(row["Tgl Lahir"] || row["Tanggal Lahir"]);
       const bup = Number(row["BUP"]) || 58;
       const parts = tglLahir.split("/");
@@ -157,11 +173,11 @@ export function SpreadsheetSimulator({
     }
 
     // 8) cek 1: IF(Umur >= BUP, "Pensiun", "Belum Pensiun")
-    if (
-      val.includes("IF(G" + r + ">=H" + r) || 
-      val.includes("IF(G2>=H2") || 
-      val.includes("G" + r + ">=H" + r)
-    ) {
+    const isCek1 = val.includes("IF") &&
+                   (val.includes("G" + r) || val.includes("G2") || val.includes("UMUR")) &&
+                   (val.includes("H" + r) || val.includes("H2") || val.includes("BUP")) &&
+                   val.includes("PENSIUN");
+    if (isCek1) {
       const tglLahir = String(row["Tgl Lahir"] || row["Tanggal Lahir"]);
       const parts = tglLahir.split("/");
       let umur = 50;
@@ -173,11 +189,11 @@ export function SpreadsheetSimulator({
     }
 
     // 9) Prospek: IF(Bakidebet Juni <= 100,000,000, "BISA", "TIDAK BISA")
-    if (
-      val.includes("IF(M" + r + "<=100000000") || 
-      val.includes("IF(M2<=100000000") || 
-      val.includes("M" + r + "<=100000000")
-    ) {
+    const isProspekKelayakan = val.includes("IF") &&
+                               (val.includes("M" + r) || val.includes("M2") || val.includes("BAKIDEBET") || val.includes("DEBET")) &&
+                               (val.includes("100000000") || val.includes("100M") || val.includes("100.000.000")) &&
+                               val.includes("BISA") && val.includes("TIDAKBISA");
+    if (isProspekKelayakan) {
       const bakiDebet = Number(row["Bakidebet Juni"] || row["Baki Debet"]) || 0;
       return bakiDebet <= 100000000 ? "BISA" : "TIDAK BISA";
     }
@@ -265,8 +281,17 @@ export function SpreadsheetSimulator({
       return;
     }
 
-    // Verify against expected formulas for the active challenge
-    const inputUpper = userInput.toUpperCase().replace(/\s+/g, "");
+    // Helper to normalize formulas for clean validation
+    const normalizeForComparison = (str: string) => {
+      return str
+        .toUpperCase()
+        .replace(/\s+/g, "")
+        .replace(/;/g, ",")
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'");
+    };
+
+    const inputUpper = normalizeForComparison(userInput);
     
     // Check if there's an active challenge matching this column
     const matchingChallenge = TUTORIAL_CHALLENGES.find(
@@ -276,12 +301,12 @@ export function SpreadsheetSimulator({
     let isCorrect = false;
     if (matchingChallenge) {
       isCorrect = matchingChallenge.expectedFormula.some(expected => {
-        const expectedUpper = expected.toUpperCase().replace(/\s+/g, "");
+        const expectedUpper = normalizeForComparison(expected);
         return inputUpper === expectedUpper || inputUpper.startsWith(expectedUpper.substring(0, 10)); // forgiving prefix matching
       });
     } else {
       // Generic check if it matches default formula template
-      const defaultUpper = (colConfig.formula || "").toUpperCase().replace(/\s+/g, "");
+      const defaultUpper = normalizeForComparison(colConfig.formula || "");
       isCorrect = inputUpper === defaultUpper || inputUpper.substring(0, 8) === defaultUpper.substring(0, 8);
     }
 
