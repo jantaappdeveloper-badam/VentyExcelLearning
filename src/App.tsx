@@ -27,6 +27,7 @@ export default function App() {
   
   // Sidebar toggles
   const [showAiAssistant, setShowAiAssistant] = useState<boolean>(true);
+  const [showLeftSidebar, setShowLeftSidebar] = useState<boolean>(true);
 
   // Initialize challenges
   useEffect(() => {
@@ -371,10 +372,19 @@ export default function App() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Toggle Panel Kiri (Selayar Penuh) */}
+          <button
+            onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+            className="px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-700 border border-emerald-700/60 text-white text-xs font-black rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            title="Sembunyikan / Tampilkan Panel Kiri (Materi & File)"
+          >
+            {showLeftSidebar ? "🖥️ Sembunyikan Panel Kiri (Selayar Penuh)" : "📁 Tampilkan Panel Kiri"}
+          </button>
+
           {trainingState === "W1_SIMULATION" ? (
             <button
               onClick={() => setTrainingState("W2_PRESENTATION")}
-              className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1"
+              className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1 font-bold"
             >
               <span>Lanjut ke Penjelasan Window 2</span>
               <ChevronRight className="w-4 h-4" />
@@ -382,7 +392,7 @@ export default function App() {
           ) : (
             <button
               onClick={() => setTrainingState("SUMMARY")}
-              className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1"
+              className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1 font-bold"
             >
               <span>Selesaikan Training & Lihat Hasil</span>
               <CheckCircle className="w-4 h-4" />
@@ -423,6 +433,20 @@ export default function App() {
               </div>
             </div>
 
+            {/* Left Sidebar Toggle */}
+            <button
+              onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+              className={`p-2.5 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs border ${
+                !showLeftSidebar 
+                  ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700" 
+                  : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200"
+              }`}
+              title="Sembunyikan atau Tampilkan Panel Teori & File Pembelajaran"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-slate-500" />
+              <span>{showLeftSidebar ? "Sembunyikan Panel Kiri" : "Tampilkan Panel Kiri"}</span>
+            </button>
+
             {/* AI Coaching Toggle */}
             <button
               onClick={() => setShowAiAssistant(!showAiAssistant)}
@@ -443,68 +467,99 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
         {/* Left Hand: Window/Task Selector + Learning Theory Module (Span 4) */}
-        <section className="col-span-1 lg:col-span-4 flex flex-col gap-5 min-h-0">
-          
-          {/* File Selection Card (2 Window Simulators) */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4.5 shadow-sm select-none">
-            <h3 className="font-display font-bold text-xs text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Layers3 className="w-4 h-4 text-slate-500" /> Pilih File Simulasi (2 Windows)
-            </h3>
+        {showLeftSidebar && (
+          <section className="col-span-1 lg:col-span-4 flex flex-col gap-5 min-h-0">
             
-            <div className="flex flex-col gap-2.5">
-              {/* Window 1 */}
-              <button
-                onClick={() => handleWindowChange("prospek_under_100jt")}
-                className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
-                  activeWindowId === "prospek_under_100jt"
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs ring-2 ring-emerald-50"
-                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
-                }`}
-              >
-                <div className={`p-2 rounded-lg shrink-0 ${activeWindowId === "prospek_under_100jt" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"}`}>
-                  <FileSpreadsheet className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="font-bold text-xs">Window 1: Template Prospek</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">Plafond Under 100juta (Data nominatif & Prospek)</p>
-                </div>
-              </button>
+            {/* File Selection Card (2 Window Simulators) */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4.5 shadow-sm select-none">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-display font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Layers3 className="w-4 h-4 text-slate-500" /> Pilih File Simulasi (2 Windows)
+                </h3>
+                <button
+                  onClick={() => setShowLeftSidebar(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                  title="Sembunyikan Panel Kiri (Selayar Penuh)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-2.5">
+                {/* Window 1 */}
+                <button
+                  onClick={() => handleWindowChange("prospek_under_100jt")}
+                  className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                    activeWindowId === "prospek_under_100jt"
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs ring-2 ring-emerald-50"
+                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg shrink-0 ${activeWindowId === "prospek_under_100jt" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"}`}>
+                    <FileSpreadsheet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">Window 1: Template Prospek</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">Plafond Under 100juta (Data nominatif & Prospek)</p>
+                  </div>
+                </button>
 
-              {/* Window 2 */}
+                {/* Window 2 */}
+                <button
+                  onClick={() => handleWindowChange("pegawai_plus_bup")}
+                  className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                    activeWindowId === "pegawai_plus_bup"
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs ring-2 ring-emerald-50"
+                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg shrink-0 ${activeWindowId === "pegawai_plus_bup" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"}`}>
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">Window 2: Pegawai Plus BUP</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">Batas Usia Pensiun & Sisa Masa Dinas Pegawai</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Theory and Chapter Selector Module */}
+            <div className="flex-1 min-h-0">
+              <LessonContent
+                activeModuleIndex={activeModuleIndex}
+                setActiveModuleIndex={handleModuleChange}
+                activeChallenge={activeChallenge}
+                setActiveChallenge={setActiveChallenge}
+                challenges={challenges}
+                onChallengeSelect={handleChallengeSelect}
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Center: Excel Grid Simulator Canvas (Span 5 to 12 depending on sidebar toggles) */}
+        <section className={`col-span-1 flex flex-col min-h-0 ${
+          showLeftSidebar 
+            ? (showAiAssistant ? "lg:col-span-5" : "lg:col-span-8")
+            : (showAiAssistant ? "lg:col-span-9" : "lg:col-span-12")
+        }`}>
+          {/* Quick toggle to show Left Sidebar if it was closed */}
+          {!showLeftSidebar && (
+            <div className="mb-3 bg-slate-100 p-2.5 px-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4 select-none">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span className="text-xs text-slate-600 font-medium">Panel pembelajaran tersembunyi. Silakan tampilkan kembali jika Anda membutuhkan panduan materi atau ingin berganti Window latihan.</span>
+              </div>
               <button
-                onClick={() => handleWindowChange("pegawai_plus_bup")}
-                className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
-                  activeWindowId === "pegawai_plus_bup"
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs ring-2 ring-emerald-50"
-                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
-                }`}
+                onClick={() => setShowLeftSidebar(true)}
+                className="p-1 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
               >
-                <div className={`p-2 rounded-lg shrink-0 ${activeWindowId === "pegawai_plus_bup" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"}`}>
-                  <Layers className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="font-bold text-xs">Window 2: Pegawai Plus BUP</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5 leading-normal font-semibold">Batas Usia Pensiun & Sisa Masa Dinas Pegawai</p>
-                </div>
+                Tampilkan Materi Pembelajaran
               </button>
             </div>
-          </div>
+          )}
 
-          {/* Theory and Chapter Selector Module */}
-          <div className="flex-1 min-h-0">
-            <LessonContent
-              activeModuleIndex={activeModuleIndex}
-              setActiveModuleIndex={handleModuleChange}
-              activeChallenge={activeChallenge}
-              setActiveChallenge={setActiveChallenge}
-              challenges={challenges}
-              onChallengeSelect={handleChallengeSelect}
-            />
-          </div>
-        </section>
-
-        {/* Center: Excel Grid Simulator Canvas (Span 5 to 8 depending on AI sidebar) */}
-        <section className={`col-span-1 flex flex-col min-h-0 ${showAiAssistant ? "lg:col-span-5" : "lg:col-span-8"}`}>
           <SpreadsheetSimulator
             activeWindowId={activeWindowId}
             activeSheetId={activeSheetId}
