@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { 
   Table, RefreshCw, Grid, ArrowUpDown, Filter, Search, CheckSquare, 
-  HelpCircle, CheckCircle2, ChevronRight, Play, Eye, FileSpreadsheet, Lock, Unlock, HelpCircle as HelpIcon, Sparkles
+  HelpCircle, CheckCircle2, ChevronRight, Play, Eye, FileSpreadsheet, Lock, Unlock, HelpCircle as HelpIcon, Sparkles,
+  Copy, Clipboard
 } from "lucide-react";
 import { SimulatorWindow, SheetConfig, Challenge, SpreadsheetRow } from "../types";
 import { INITIAL_WINDOWS_DATA, formatIDR, TUTORIAL_CHALLENGES } from "../data";
+
+// Helper to adjust Excel formula row references dynamically when copy-pasting/propagating
+export const adjustFormulaRow = (formula: string, sourceRow: number, targetRow: number): string => {
+  if (!formula.startsWith("=")) return formula;
+  
+  // Match column letters (1-2 characters, A-Z) followed by the specific sourceRow index,
+  // making sure they aren't part of a longer word (using word boundaries and non-letter bounds).
+  const regex = new RegExp(`([^A-Z]|^)([A-Z]{1,2})(${sourceRow})\\b`, "gi");
+  
+  return formula.replace(regex, (match, prefix, col, rowStr) => {
+    return prefix + col + targetRow;
+  });
+};
 
 interface SpreadsheetSimulatorProps {
   activeWindowId: string;
@@ -32,6 +46,10 @@ export function SpreadsheetSimulator({
   const [formulaBarInput, setFormulaBarInput] = useState<string>("");
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "info" | "error" } | null>(null);
   
+  // Copy-Paste System States
+  const [copiedFormula, setCopiedFormula] = useState<string | null>(null);
+  const [copiedSourceRowIdx, setCopiedSourceRowIdx] = useState<number | null>(null);
+  
   // Grid/UI Preferences
   const [isHeaderFrozen, setIsHeaderFrozen] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -48,6 +66,38 @@ export function SpreadsheetSimulator({
     setSearchQuery("");
     setFilterBranch("ALL");
   }, [activeWindowId, activeSheetId]);
+
+  // Keyboard Shortcuts for Copy and Paste (Ctrl+C / Ctrl+V or Cmd+C / Cmd+V)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedCell) return;
+      
+      // Do not trigger if typing inside input or textarea
+      if (
+        document.activeElement?.tagName === "INPUT" || 
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      // Ctrl+C or Cmd+C
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        handleCopyCell();
+      }
+      
+      // Ctrl+V or Cmd+V
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        handlePasteCell();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedCell, copiedFormula, copiedSourceRowIdx, data, activeSheet, activeWindowId, activeSheetId]);
 
 
 
@@ -345,18 +395,18 @@ export function SpreadsheetSimulator({
     }
 
     if (isCorrect) {
-      // Propagate formula to all rows in this column
-      const updatedData = data.map((row) => {
-        // Adapt formula for individual row indices
+      // Propagate formula to all rows in this column, adjusting row references dynamically!
+      const updatedData = data.map((row, idx) => {
+        const adjustedFormula = adjustFormulaRow(userInput, rIdx + 2, idx + 2);
         return {
           ...row,
-          [`_user_formula_${colConfig.key}`]: userInput
+          [`_user_formula_${colConfig.key}`]: adjustedFormula
         };
       });
 
       setData(updatedData);
       setStatusMessage({ 
-        text: `Sukses! Rumus "${userInput}" diterapkan pada seluruh kolom ${colConfig.label}!`, 
+        text: `Sukses! Rumus "${userInput}" diterapkan pada seluruh kolom ${colConfig.label} dengan penyesuaian baris otomatis!`, 
         type: "success" 
       });
 
@@ -369,6 +419,179 @@ export function SpreadsheetSimulator({
         text: `Salah Rumus! Silakan tinjau panduan Modul atau tanya AI Coach. Petunjuk: gunakan nama sel baris 2 (misal: H2, I2, F2, dst.)`, 
         type: "error" 
       });
+    }
+  };
+
+  // Helper to handle copying a cell's contents (Ctrl+C / ribbon button)
+  const handleCopyCell = () => {
+    if (!selectedCell) {
+      setStatusMessage({ text: "Silakan pilih sel terlebih dahulu untuk disalin.", type: "error" });
+      return;
+    }
+    const { rIdx, cIdx } = selectedCell;
+    const colConfig = activeSheet.columns[cIdx];
+    const row = data[rIdx];
+    
+    if (colConfig.type === "formula") {
+      const userFormula = row[`_user_formula_${colConfig.key}`] || colConfig.formula || "";
+      setCopiedFormula(userFormula);
+      setCopiedSourceRowIdx(rIdx);
+      setStatusMessage({ 
+        text: `Rumus "${userFormula}" berhasil disalin! Pilih sel tujuan lalu tekan 'Tempel Sel' atau gunakan Ctrl+V.`, 
+        type: "info" 
+      });
+    } else {
+      const cellValue = String(row[colConfig.key] ?? "");
+      setCopiedFormula(cellValue);
+      setCopiedSourceRowIdx(rIdx);
+      setStatusMessage({ 
+        text: `Nilai "${cellValue}" berhasil disalin! Pilih sel tujuan lalu tekan 'Tempel Sel' atau gunakan Ctrl+V.`, 
+        type: "info" 
+      });
+    }
+  };
+
+  // Helper to handle pasting copied contents with row adjustments (Ctrl+V / ribbon button)
+  const handlePasteCell = () => {
+    if (!selectedCell) {
+      setStatusMessage({ text: "Silakan pilih sel tujuan untuk menempel.", type: "error" });
+      return;
+    }
+    if (copiedFormula === null || copiedSourceRowIdx === null) {
+      setStatusMessage({ text: "Tidak ada data yang disalin. Silakan pilih sel asal dan klik 'Salin Sel' terlebih dahulu.", type: "error" });
+      return;
+    }
+    
+    const { rIdx, cIdx } = selectedCell;
+    const colConfig = activeSheet.columns[cIdx];
+    
+    if (colConfig.type !== "formula") {
+      // Paste standard value
+      const updatedData = [...data];
+      const parsedVal = isNaN(Number(copiedFormula)) ? copiedFormula : Number(copiedFormula);
+      updatedData[rIdx][colConfig.key] = parsedVal;
+      setData(updatedData);
+      setStatusMessage({ text: `Menempel nilai menjadi "${copiedFormula}"`, type: "success" });
+      return;
+    }
+
+    // Paste formula with dynamic row reference adjustment!
+    const sourceRow = copiedSourceRowIdx + 2;
+    const targetRow = rIdx + 2;
+    const adjustedFormula = adjustFormulaRow(copiedFormula, sourceRow, targetRow);
+    
+    // Validate adjusted formula
+    const userInput = adjustedFormula.trim();
+    const normalizeForComparison = (str: string) => {
+      return str
+        .toUpperCase()
+        .replace(/\s+/g, "")
+        .replace(/;/g, ",")
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'");
+    };
+    const inputUpper = normalizeForComparison(userInput);
+    const matchingChallenge = TUTORIAL_CHALLENGES.find(
+      c => c.windowId === activeWindowId && c.sheetId === activeSheetId && c.targetColumn === colConfig.key
+    );
+
+    let isCorrect = false;
+    if (matchingChallenge) {
+      isCorrect = matchingChallenge.expectedFormula.some(expected => {
+        const expectedUpper = normalizeForComparison(expected);
+        return inputUpper === expectedUpper || inputUpper.startsWith(expectedUpper.substring(0, 10));
+      });
+    } else {
+      const defaultUpper = normalizeForComparison(colConfig.formula || "");
+      isCorrect = inputUpper === defaultUpper || inputUpper.substring(0, 8) === defaultUpper.substring(0, 8);
+    }
+
+    if (isCorrect) {
+      // Apply adjusted formula to the target row
+      const updatedData = [...data];
+      updatedData[rIdx] = {
+        ...updatedData[rIdx],
+        [`_user_formula_${colConfig.key}`]: userInput
+      };
+      setData(updatedData);
+      setFormulaBarInput(userInput);
+      setStatusMessage({ 
+        text: `Sukses menempel rumus ke sel ${selectedCell.key}: "${userInput}"`, 
+        type: "success" 
+      });
+
+      // Also propagate/copy formula down to all other rows for complete correctness!
+      const fullyPropagated = updatedData.map((row, idx) => {
+        const rowAdjusted = adjustFormulaRow(userInput, targetRow, idx + 2);
+        return {
+          ...row,
+          [`_user_formula_${colConfig.key}`]: rowAdjusted
+        };
+      });
+      setData(fullyPropagated);
+
+      if (matchingChallenge) {
+        onChallengeComplete(matchingChallenge.id);
+      }
+    } else {
+      // Paste anyway but warn
+      const updatedData = [...data];
+      updatedData[rIdx] = {
+        ...updatedData[rIdx],
+        [`_user_formula_${colConfig.key}`]: userInput
+      };
+      setData(updatedData);
+      setFormulaBarInput(userInput);
+      setStatusMessage({ 
+        text: `Menempel rumus "${userInput}". Tinjau apakah rumus sudah sesuai dengan kriteria baris ini.`, 
+        type: "info" 
+      });
+    }
+  };
+
+  // Helper to handle copying formula of selected cell down to all rows
+  const handleCopyFormulaDown = () => {
+    if (!selectedCell) {
+      setStatusMessage({ text: "Silakan pilih sel rumus asal terlebih dahulu.", type: "error" });
+      return;
+    }
+    const { rIdx, cIdx } = selectedCell;
+    const colConfig = activeSheet.columns[cIdx];
+    if (colConfig.type !== "formula") {
+      setStatusMessage({ text: "Salin ke Bawah (Copy Down) hanya berlaku untuk kolom rumus.", type: "error" });
+      return;
+    }
+
+    const row = data[rIdx];
+    const sourceFormula = row[`_user_formula_${colConfig.key}`] || colConfig.formula || "";
+    if (!sourceFormula || !sourceFormula.startsWith("=")) {
+      setStatusMessage({ text: "Sel tidak memiliki rumus yang valid untuk disalin ke bawah.", type: "error" });
+      return;
+    }
+
+    const sourceRow = rIdx + 2;
+    
+    // Propagate the formula to all rows in this column, adjusting row references dynamically!
+    const updatedData = data.map((row, idx) => {
+      const adjustedFormula = adjustFormulaRow(sourceFormula, sourceRow, idx + 2);
+      return {
+        ...row,
+        [`_user_formula_${colConfig.key}`]: adjustedFormula
+      };
+    });
+
+    setData(updatedData);
+    setStatusMessage({ 
+      text: `Sukses menyalin rumus "${sourceFormula}" dari baris ${sourceRow} ke seluruh baris di bawahnya dengan penyesuaian baris otomatis!`, 
+      type: "success" 
+    });
+
+    // Check if there's an active challenge matching this column to mark it complete
+    const matchingChallenge = TUTORIAL_CHALLENGES.find(
+      c => c.windowId === activeWindowId && c.sheetId === activeSheetId && c.targetColumn === colConfig.key
+    );
+    if (matchingChallenge) {
+      onChallengeComplete(matchingChallenge.id);
     }
   };
 
@@ -648,14 +871,14 @@ export function SpreadsheetSimulator({
       </div>
 
       {/* Excel Formula Bar */}
-      <div className="bg-slate-50/70 border-b border-slate-200 p-2 flex items-center gap-2 select-none shrink-0 font-mono text-[11px]">
+      <div className="bg-slate-50/70 border-b border-slate-200 p-2 flex flex-wrap items-center gap-2 select-none shrink-0 font-mono text-[11px]">
         <div className="bg-white border border-slate-200 px-3 py-1.5 rounded-md font-semibold text-slate-700 min-w-14 text-center shadow-2xs">
           {selectedCell ? selectedCell.key : "A1"}
         </div>
         <div className="text-slate-400 font-display font-bold text-sm select-none px-1">
           fx
         </div>
-        <div className="flex-1 flex gap-2">
+        <div className="flex-1 flex flex-wrap gap-2">
           <input
             type="text"
             value={formulaBarInput}
@@ -664,14 +887,48 @@ export function SpreadsheetSimulator({
               if (e.key === "Enter") handleApplyFormula();
             }}
             placeholder="Masukkan nilai atau rumus Excel (mulai dengan = )"
-            className="flex-1 bg-white border border-slate-200 px-3.5 py-1.5 rounded-lg text-[11px] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 placeholder:text-slate-400 font-semibold"
+            className="flex-1 min-w-[200px] bg-white border border-slate-200 px-3.5 py-1.5 rounded-lg text-[11px] focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 placeholder:text-slate-400 font-semibold"
           />
           <button
             onClick={handleApplyFormula}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 transition-colors text-[10.5px] shadow-xs"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 transition-colors text-[10.5px] shadow-xs shrink-0"
+            title="Terapkan rumus ke sel terpilih (Enter)"
           >
             <Play className="w-3 h-3 fill-white" /> Terapkan
           </button>
+          
+          <div className="h-6 w-[1px] bg-slate-300 self-center mx-1 shrink-0" />
+          
+          <button
+            onClick={handleCopyCell}
+            className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors text-[10.5px] shadow-2xs shrink-0"
+            title="Salin isi sel / rumus terpilih (Ctrl+C)"
+          >
+            <Copy className="w-3 h-3 text-slate-500" /> Salin Sel
+          </button>
+          
+          <button
+            onClick={handlePasteCell}
+            className={`font-bold px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors text-[10.5px] shadow-2xs shrink-0 ${
+              copiedFormula !== null 
+                ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border border-amber-500" 
+                : "bg-white text-slate-400 border border-slate-200 cursor-not-allowed opacity-50"
+            }`}
+            disabled={copiedFormula === null}
+            title="Tempel isi/rumus tersalin ke sel terpilih (Ctrl+V)"
+          >
+            <Clipboard className="w-3 h-3" /> Tempel Sel
+          </button>
+
+          {selectedCell && activeSheet.columns[selectedCell.cIdx]?.type === "formula" && (
+            <button
+              onClick={handleCopyFormulaDown}
+              className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors text-[10.5px] shadow-2xs shrink-0"
+              title="Salin rumus ke baris bawah/selanjutnya secara otomatis"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" /> Salin ke Bawah (Copy Down)
+            </button>
+          )}
         </div>
       </div>
 

@@ -19,7 +19,7 @@ export const INITIAL_WINDOWS_DATA: SimulatorWindow[] = [
     sheets: [
       {
         id: "data_nominatif",
-        name: "Data nominatif",
+        name: "DATA_NOMINATIF",
         csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRKf0KJNAOjClnAaQlC4YycHAQV2pW5F-7Z3S4UDAisUVFOJWkxuwoI_GoL3W5Pj_5MGboLDZZI4srj/pub?gid=1112420584&single=true&output=csv",
         columns: [
           { key: "CABANG", label: "CABANG", type: "string" },
@@ -51,7 +51,7 @@ export const INITIAL_WINDOWS_DATA: SimulatorWindow[] = [
       },
       {
         id: "prospek",
-        name: "Prospek",
+        name: "PROSPEK",
         csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRKf0KJNAOjClnAaQlC4YycHAQV2pW5F-7Z3S4UDAisUVFOJWkxuwoI_GoL3W5Pj_5MGboLDZZI4srj/pub?gid=192475242&single=true&output=csv",
         columns: [
           { key: "NOFAS", label: "NOFAS", type: "string" },
